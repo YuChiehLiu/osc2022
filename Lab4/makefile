@@ -1,0 +1,54 @@
+CC = aarch64-linux-gnu-gcc
+LINKER = aarch64-linux-gnu-ld
+OBJ_CPY = aarch64-linux-gnu-objcopy
+
+CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -g
+INC = -Iinclude/kernel/ -Iinclude/lib/
+
+OBJ_DIR = objs
+SRC_DIR = src
+
+
+SRCS = $(wildcard $(SRC_DIR)/*/*.c) $(wildcard $(SRC_DIR)/*/*.S)
+OBJS := $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o,$(SRCS))
+OBJS := $(patsubst $(SRC_DIR)/%.S, $(OBJ_DIR)/%.o, $(OBJS))
+
+KERFIL = $(OBJ_DIR)/bootloader/start.o $(OBJ_DIR)/bootloader/bootloader.o
+
+
+all: kernel8.img bootloader.img
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) $(INC) -c $< -o $@
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.S
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) $(INC) -c $< -o $@
+
+kernel8.img: $(OBJS) 
+	$(LINKER) -nostdlib -nostartfiles $(filter-out $(KERFIL),$(OBJS)) -T $(SRC_DIR)/kernel/link.ld -o kernel8.elf
+	$(OBJ_CPY) -O binary kernel8.elf kernel8.img
+
+bootloader.img: $(OBJS)
+	$(LINKER) -nostdlib -nostartfiles $(filter $(OBJ_DIR)/bootloader/%.o $(OBJ_DIR)/lib/%.o,$(OBJS)) -T $(SRC_DIR)/bootloader/link.ld -o bootloader.elf
+	$(OBJ_CPY) -O binary bootloader.elf bootloader.img
+
+run:
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial stdio
+
+initrd:
+	qemu-system-aarch64 -M raspi3 -kernel bootloader.img -serial null -serial pty -initrd initramfs.cpio
+
+stdinitrd:
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial stdio -initrd initramfs.cpio
+
+debug:
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -S -s -serial null -serial stdio -initrd initramfs.cpio
+
+test:
+	@echo $(KERFIL)
+
+clean:
+	rm -rf build objs *.img *.elf 2>/dev/null
+
