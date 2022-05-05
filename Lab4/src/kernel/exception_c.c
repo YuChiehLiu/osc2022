@@ -1,4 +1,25 @@
+#include "gpio.h"
 #include "uart.h"
+#include "string.h"
+#include "exception.h"
+#include "timer_handler.h"
+
+/* Auxilary mini UART registers */
+#define AUX_ENABLE      ((volatile unsigned int*)(MMIO_BASE+0x00215004))
+#define AUX_MU_IO       ((volatile unsigned int*)(MMIO_BASE+0x00215040))
+#define AUX_MU_IER      ((volatile unsigned int*)(MMIO_BASE+0x00215044))
+#define AUX_MU_IIR      ((volatile unsigned int*)(MMIO_BASE+0x00215048))
+#define AUX_MU_LCR      ((volatile unsigned int*)(MMIO_BASE+0x0021504C))
+#define AUX_MU_MCR      ((volatile unsigned int*)(MMIO_BASE+0x00215050))
+#define AUX_MU_LSR      ((volatile unsigned int*)(MMIO_BASE+0x00215054))
+#define AUX_MU_MSR      ((volatile unsigned int*)(MMIO_BASE+0x00215058))
+#define AUX_MU_SCRATCH  ((volatile unsigned int*)(MMIO_BASE+0x0021505C))
+#define AUX_MU_CNTL     ((volatile unsigned int*)(MMIO_BASE+0x00215060))
+#define AUX_MU_STAT     ((volatile unsigned int*)(MMIO_BASE+0x00215064))
+#define AUX_MU_BAUD     ((volatile unsigned int*)(MMIO_BASE+0x00215068))
+#define IRQs_1          ((volatile unsigned int*)(MMIO_BASE+0x0000b210))
+
+int buffer_count=0;
 
 void exc_handler(unsigned long type, unsigned long esr, unsigned long elr, unsigned long spsr, unsigned long far)
 {
@@ -52,4 +73,112 @@ void exc_handler(unsigned long type, unsigned long esr, unsigned long elr, unsig
     uart_hex(esr>>32);
     uart_hex(esr);
     uart_puts("\n");
+}
+
+void L0_timer_handler(long cntpct_el0, long cntfrq_el0)
+{
+    // disable core timer interrupt  
+    asm volatile
+    (
+        "mov x3, 0\n\t"
+        "msr cntp_ctl_el0, x3\n\t"
+    );
+    
+    long nowtime = cntpct_el0/cntfrq_el0;
+    char NOWTIME[10];
+
+    itoa(nowtime, NOWTIME, 1);
+
+    uart_puts("\nTime's out!!! Now time is ");
+    uart_puts(NOWTIME);
+    uart_puts(" s\n");
+}
+
+void IRQ_parser(long cntpct_el0, long cntfrq_el0, void* IRQ_source, void* IIR_ADDR)
+{
+    int irq_source = *((int*)IRQ_source);
+    int aux_mu_iir = *((int*)IIR_ADDR);
+    char IRQS[5], IIR[10];
+    itoa(irq_source, IRQS, 4);
+    itohexa(aux_mu_iir, IIR, 8);
+
+    if(irq_source==256)
+    {
+        if(aux_mu_iir&0x02)
+            TX_handler(IRQS, IIR);
+        else if(aux_mu_iir&0x04)
+            RX_handler(IRQS, IIR);
+    }
+    else if(irq_source==2)
+        L1_timer_handler(cntpct_el0, cntfrq_el0);
+
+}
+
+void L1_timer_handler(long cntpct_el0, long cntfrq_el0)
+{
+    // disable core timer interrupt  
+    asm volatile
+    (
+        "mov x3, 0\n\t"
+        "msr cntp_ctl_el0, x3\n\t"
+    );
+    
+    long nowtime = cntpct_el0/cntfrq_el0;
+    char NOWTIME[10];
+    
+    itoa(nowtime, NOWTIME, 1);
+    uart_puts("\nTime's out!!! Now time is ");
+    uart_puts(NOWTIME);
+    uart_puts(" s\n");
+
+    uart_puts("Message : ");
+    uart_puts(node[front].message);
+    uart_puts("\n");
+
+    front++;
+    if(!is_empty())
+    {
+        find_min();
+        asm volatile
+        (
+            "msr cntp_cval_el0, %0\n\t" // set expired time
+            "bl core_timer_enable\n\t"
+            :
+            :"r"(node[front].second)
+            :
+        );
+    }
+}
+
+void TX_handler(char* irq,char *iir)
+{
+    if(buffer_count<len_WB)
+        *AUX_MU_IO=write_buffer[buffer_count++];
+    else
+    {
+        *AUX_MU_IER=0;
+        buffer_count=0;
+    }
+}
+
+void RX_handler(char* irq,char *iir)
+{
+    read_buffer[len_RB++]=*AUX_MU_IO;
+    
+    if(read_buffer[len_RB-1]=='\r')
+    {
+        uart_puts("IRQ Source : ");
+        uart_puts(irq);
+        uart_puts(" ; IIR : ");
+        uart_puts(iir);
+        uart_puts("\n");
+        *AUX_MU_IER=0;
+        read_buffer[len_RB]='\0';
+        len_RB=0;
+    }
+    // else
+    // {
+    //     uart_puts(read_buffer);
+    //     uart_puts("\n");
+    // }   
 }

@@ -1,6 +1,16 @@
+typedef struct timer_queue_Node tq;
+
+struct timer_queue_Node
+{
+    long long second;
+    char message[21];
+};
+
+extern tq node[10];
+extern int front;
+extern int back;
+
 void get_nowtime();
-void L0_timer_handler(long cntpct_el0, long cntfrq_el0);
 void add_timer(int sec, char* mes);
-void L1_timer_handler(long cntpct_el0, long cntfrq_el0);
 int is_empty();
 void find_min();

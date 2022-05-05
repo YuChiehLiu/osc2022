@@ -25,10 +25,12 @@ void command_help()
     uart_puts("cat\t : print the file contents\n");
     uart_puts("svc\t : test svc\n");
     uart_puts("time\t : display now time and trigger set a 2s timer interrupt \n");
-    uart_puts("sto\t : [SECONDS] [MESSAGE]\n");
+    uart_puts("sto\t : [MESSAGE] [SECONDS]\n");
     uart_puts("cma\t : [SIZE]\n");
     uart_puts("free\t : [index]\n");
     uart_puts("lsrm\t : list all reserved memory\n");
+    uart_puts("asyr\t : for test asynchronous UART read");
+    uart_puts("asyw\t : for test asynchronous UART write");
     uart_puts("reboot\t : reboot the device\n");
     uart_puts("\n");
 }

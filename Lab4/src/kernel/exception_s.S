@@ -1,3 +1,6 @@
+#define CORE0_INTERRUPT_SOURCE 0x40000060
+#define IIR_ADDR 0x3f215048
+
 .global set_exception_vector_table
 .global exception_vector_table
 
@@ -107,8 +110,10 @@ core_timer_handler_L0:
 core_timer_handler_L1:
     save_all
     mrs x0, cntpct_el0
-    mrs x1, cntfrq_el0    
-    bl L1_timer_handler
+    mrs x1, cntfrq_el0
+    ldr x2, =CORE0_INTERRUPT_SOURCE
+    ldr x3, =IIR_ADDR  
+    bl IRQ_parser
     load_all
     eret
 

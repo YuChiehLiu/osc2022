@@ -24,8 +24,9 @@
  */
 
 #include "gpio.h"
+#include "string.h"
 
-/* Auxilary mini UART registers */
+ /* Auxilary mini UART registers */
 #define AUX_ENABLE      ((volatile unsigned int*)(MMIO_BASE+0x00215004))
 #define AUX_MU_IO       ((volatile unsigned int*)(MMIO_BASE+0x00215040))
 #define AUX_MU_IER      ((volatile unsigned int*)(MMIO_BASE+0x00215044))
@@ -38,6 +39,12 @@
 #define AUX_MU_CNTL     ((volatile unsigned int*)(MMIO_BASE+0x00215060))
 #define AUX_MU_STAT     ((volatile unsigned int*)(MMIO_BASE+0x00215064))
 #define AUX_MU_BAUD     ((volatile unsigned int*)(MMIO_BASE+0x00215068))
+#define IRQs_1          ((volatile unsigned int*)(MMIO_BASE+0x0000b210))
+
+char read_buffer[100];
+char write_buffer[100];
+int len_WB=0;
+int len_RB=0;
 
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
@@ -137,4 +144,25 @@ void uart_myputs(char *s, int str_size) {
         uart_send(*s++);
         str_size--;
     }
+}
+
+void asyn_read()
+{
+    strset(read_buffer, '\0', 100);
+
+    *AUX_MU_IER = 1;
+    *IRQs_1 = (1<<29);     // Enable IRQs1
+    asm volatile("msr DAIFClr, 0xf");
+
+    while(read_buffer[strlen(read_buffer)-1]!='\r');
+}
+
+void asyn_write(char* string)
+{
+    strcpy(string, write_buffer);
+    len_WB = strlen(write_buffer);
+
+    *AUX_MU_IER = 2;
+    *IRQs_1 = (1<<29);     // Enable IRQs1
+    asm volatile("msr DAIFClr, 0xf");
 }

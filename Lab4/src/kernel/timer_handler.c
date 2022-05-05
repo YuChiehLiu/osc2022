@@ -1,16 +1,8 @@
+#include "gpio.h"
 #include "uart.h"
 #include "string.h"
 #include "shell.h"
 #include "timer_handler.h"
-
-typedef struct timer_queue_Node tq;
-
-struct timer_queue_Node
-{
-    long long second;
-    char message[21];
-};
-
 
 tq node[10];
 int front=0;
@@ -37,25 +29,6 @@ void get_nowtime()
     uart_puts("Now time is ");
     uart_puts(NOWTIME);
     uart_puts(" s\n");
-}
-
-void L0_timer_handler(long cntpct_el0, long cntfrq_el0)
-{
-    // disable core timer interrupt  
-    asm volatile
-    (
-        "mov x3, 0\n\t"
-        "msr cntp_ctl_el0, x3\n\t"
-    );
-    
-    long nowtime = cntpct_el0/cntfrq_el0;
-    char NOWTIME[10];
-
-    itoa(nowtime, NOWTIME, 1);
-
-    uart_puts("\nTime's out!!! Now time is ");
-    uart_puts(NOWTIME);
-    uart_puts(" s\n\r# ");
 }
 
 
@@ -95,44 +68,6 @@ void add_timer(int sec, char* mes)
         :"r"(node[front].second)
         :"x0", "x1"
     );
-}
-
-void L1_timer_handler(long cntpct_el0, long cntfrq_el0)
-{
-    // disable core timer interrupt  
-    asm volatile
-    (
-        "mov x3, 0\n\t"
-        "msr cntp_ctl_el0, x3\n\t"
-    );
-    
-    long nowtime = cntpct_el0/cntfrq_el0;
-    char NOWTIME[10];
-
-    itoa(nowtime, NOWTIME, 1);
-
-    uart_puts("\nTime's out!!! Now time is ");
-    uart_puts(NOWTIME);
-    uart_puts(" s\n");
-
-    uart_puts("Message : ");
-    uart_puts(node[front].message);
-    uart_puts("\n\r# ");
-
-    front++;
-
-    if(!is_empty())
-    {
-        find_min();
-        asm volatile
-        (
-            "msr cntp_cval_el0, %0\n\t" // set expired time
-            "bl core_timer_enable\n\t"
-            :
-            :"r"(node[front].second)
-            :
-        );
-    }
 }
 
 int is_full()

@@ -125,6 +125,13 @@ void exe_command2(int in_v, char *string, int *buffer_counter)
     }
     else if( strequ( string, "lsrm" ) )
         command_lsrm();
+    else if( strequ( string, "asyr" ) )
+        asyn_read();
+    else if( strequ( string, "asyw" ) )
+    {
+        asyn_write(read_buffer);
+        asyn_write("\n");
+    }
     else
         command_not_found(string);
     

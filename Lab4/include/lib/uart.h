@@ -23,6 +23,11 @@
  *
  */
 
+extern char read_buffer[100];
+extern char write_buffer[];
+extern int len_RB;
+extern int len_WB;
+
 void uart_init();
 void uart_send(unsigned int c);
 char uart_getc();
@@ -30,3 +35,5 @@ void uart_puts(char *s);
 void uart_hex(unsigned int d);
 void uart_myputs(char *s, int str_size);
 char uart_mygetc();
+void asyn_read();
+void asyn_write(char* string);
