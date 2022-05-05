@@ -165,4 +165,6 @@ void asyn_write(char* string)
     *AUX_MU_IER = 2;
     *IRQs_1 = (1<<29);     // Enable IRQs1
     asm volatile("msr DAIFClr, 0xf");
+    
+    while(strlen(write_buffer)!=0);
 }

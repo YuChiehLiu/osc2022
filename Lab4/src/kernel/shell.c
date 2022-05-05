@@ -130,7 +130,7 @@ void exe_command2(int in_v, char *string, int *buffer_counter)
     else if( strequ( string, "asyw" ) )
     {
         asyn_write(read_buffer);
-        asyn_write("\n");
+        asyn_write("\n\r");
     }
     else
         command_not_found(string);

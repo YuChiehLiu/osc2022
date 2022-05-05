@@ -158,6 +158,7 @@ void TX_handler(char* irq,char *iir)
     {
         *AUX_MU_IER=0;
         buffer_count=0;
+        strset(write_buffer, '\0', 100);
     }
 }
 

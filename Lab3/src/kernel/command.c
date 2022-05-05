@@ -5,8 +5,6 @@
 #include "string.h"
 #include "timer_handler.h"
 
-int tflag=0;
-
 void set(long addr, unsigned int value)
 {
     volatile unsigned int* point = (unsigned int*)addr;
@@ -23,8 +21,8 @@ void command_help()
     uart_puts("svc\t : test svc\n");
     uart_puts("time\t : display now time and trigger set a 2s timer interrupt \n");
     uart_puts("sto\t : [MESSAGE] [SECONDS]\n");
-    uart_puts("asyr\t : for test asynchronous UART read");
-    uart_puts("asyw\t : for test asynchronous UART write");
+    uart_puts("asyr\t : for test asynchronous UART read\n");
+    uart_puts("asyw\t : for test asynchronous UART write\n");
     uart_puts("reboot\t : reboot the device\n");
     uart_puts("\n");
 }
