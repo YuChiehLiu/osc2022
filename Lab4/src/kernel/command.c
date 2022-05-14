@@ -283,7 +283,8 @@ void command_cma(char* string)
 
         itoa(index, index_c, count);
 
-        uart_puts("configure page frame index: ");
+        asyn_write("-----------------------------------------------------");
+        uart_puts("\nconfigure page frame index: ");
         uart_puts(index_c);
         uart_puts(" \n");
 
@@ -302,6 +303,7 @@ void command_cma(char* string)
         uart_puts(" - ");
         uart_puts(end_c);
         uart_puts(" \n");
+        asyn_write("-----------------------------------------------------\n");
 
         demo();
         // uart_puts("---------------opposite---------------\n");
@@ -328,11 +330,13 @@ void command_cma(char* string)
         itohexa(start, start_c, 8);
         itohexa(end, end_c, 8);
 
-        uart_puts("configure address section: ");
+        asyn_write("-----------------------------------------------------");
+        uart_puts("\nconfigure address section: ");
         uart_puts(start_c);
         uart_puts(" - ");
         uart_puts(end_c);
         uart_puts(" \n");
+        asyn_write("-----------------------------------------------------\n");
 
         demo();
     }

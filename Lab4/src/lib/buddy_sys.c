@@ -222,7 +222,6 @@ void demo()
     char order_c[2];
     char index_c[10];
     
-    asyn_write("\n");
     for(int i=MAX_ORDER ; i>-1 ; i--)
     {
         tmp=&fa[i];
@@ -323,7 +322,7 @@ void found_RM(int pf_index, int RM_index)
     itoa(pf_index, index_c, count);
     asyn_write("Page Frame ");
     asyn_write(index_c);
-    asyn_write(" has reserved memory : ");
+    asyn_write(" contains reserved memory : ");
     asyn_write(RMlist[RM_index].name);
     asyn_write("\n");
 }
