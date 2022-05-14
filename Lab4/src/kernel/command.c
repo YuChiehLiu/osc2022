@@ -401,7 +401,7 @@ void command_lsrm()
 
     uart_puts("Reserved Memory : \n");
 
-    for(int i=0 ; i<=RMindex ; i++)
+    for(int i=1 ; i<=RMindex ; i++)
     {
         strset(start_c, '\0', 20);
         strset(end_c, '\0', 20);

@@ -1,5 +1,5 @@
-
-#define CPIO_START_ADDR 0x8000000
+// #define CPIO_START_ADDR 0x8000000
+#define CPIO_START_ADDR 0x20000000
 #define C_MAGIC 0x070701
 #define CPIO_END_SIGN "TRAILER!!!"
 
@@ -23,7 +23,7 @@ struct cpio_newc_header
 	char c_check[8];
 };
 
-void print_content(char* target_name);
-CPIO_NEWC_HEADER* get_target_addr(CPIO_NEWC_HEADER *current_file, char* target_name);
-int get_size(CPIO_NEWC_HEADER *root_addr, char* attr);
-void load_usrpgm(char* usrpgm_name);
+void print_content(char *target_name);
+CPIO_NEWC_HEADER *get_target_addr(CPIO_NEWC_HEADER *current_file, char *target_name);
+int get_size(CPIO_NEWC_HEADER *root_addr, char *attr);
+void load_usrpgm(char *usrpgm_name);

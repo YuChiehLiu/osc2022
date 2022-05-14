@@ -1,8 +1,8 @@
-#define MAX_ORDER 8 // the max order in my Buddy System
+#define MAX_ORDER 11 // the max order in my Buddy System
 #define ALLOCATED -1 // The idth frame is already allocated, hence not allocable.
-#define FREE 9 // The idth frame is free, but it belongs to a larger contiguous memory block. Hence, buddy system does not directly allocate it.
+#define FREE 99 // The idth frame is free, but it belongs to a larger contiguous memory block. Hence, buddy system does not directly allocate it.
 #define MIN_PAGE_SIZE 4096
-#define TOTAL_PAGE_FRAME 256
+#define TOTAL_PAGE_FRAME 245760
 
 #define NULL (void*)0
 
@@ -43,3 +43,4 @@ void memory_reserve(int start, int end, char* name);
 int is_include_RM(int start, int end);
 void demo();
 void demo_opp();
+void found_RM(int pf_index, int RM_index);

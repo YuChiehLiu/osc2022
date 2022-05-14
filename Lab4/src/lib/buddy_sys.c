@@ -7,7 +7,7 @@ pf_entry pf[TOTAL_PAGE_FRAME]; // page frame
 pf_entry fa[MAX_ORDER+1]; // free area : linked-list for each size
 
 reserved_memory RMlist[100];
-int RMindex=-1;
+int RMindex=0;
 
 void pf_init()
 {
@@ -18,12 +18,12 @@ void pf_init()
         fa[i].previous=&fa[i];
     }
 
-    for(int i=0 ; i<pow(2, MAX_ORDER) ; i++)
+    for(int i=0 ; i<TOTAL_PAGE_FRAME ; i++)
     {
         pf[i].index=i;
         pf[i].val=FREE;
         pf[i].allord=-1;
-        pf[i].addr=0x10000000+i*MIN_PAGE_SIZE;
+        pf[i].addr=0x00000000+i*MIN_PAGE_SIZE;
         pf[i].next=NULL;
         pf[i].previous=NULL;
     }   
@@ -32,6 +32,12 @@ void pf_init()
     fa[MAX_ORDER].previous=pf;
     pf[0].val=MAX_ORDER;
     pf[0].previous=&fa[MAX_ORDER];
+
+    for(int i=pow(2, MAX_ORDER) ; i<TOTAL_PAGE_FRAME ; i+=pow(2, MAX_ORDER))
+    {
+        pf[i].val=MAX_ORDER;
+        insert_fa(MAX_ORDER, i);
+    }
     
 }
 
@@ -75,10 +81,16 @@ int config_pf(int size_req)
         cfg_order--;
     }
 
-    if(is_include_RM(pf[cfg_page].addr, pf[cfg_page].addr+MIN_PAGE_SIZE*pow(2, pf[cfg_page].allord)))
+    // check the configured page if contains reserved memory
+    int RM_index=RM_index=is_include_RM(pf[cfg_page].addr, pf[cfg_page].addr+MIN_PAGE_SIZE*pow(2, pf[cfg_page].allord)-1);
+    if(RM_index)
     {
-        free_pf(cfg_page);
-        return -1;
+        int RM_page = cfg_page;
+        found_RM(RM_page, RM_index);
+        cfg_page = config_pf(size_req);
+        free_pf(RM_page);
+        if(cfg_page==-1)
+            return -1;
     }
 
     return cfg_page;
@@ -188,26 +200,29 @@ void memory_reserve(int start, int end, char* name)
     strcpy(name, RMlist[RMindex].name);
 }
 
+// return value : if including RM, return which no. of RM. Otherwise, return 0.
 int is_include_RM(int start, int end)
 {
-    for(int i=0 ; i<=RMindex ; i++)
+    for(int i=1 ; i<=RMindex ; i++)
     {
         if(start>RMlist[i].start && start>RMlist[i].end)
             continue;
         else if(start<RMlist[i].start && end<RMlist[i].start)
             continue;
         else
-            return 1;
+            return i;
     }
     return 0;
 }
 
+/* below functions just for demo */
 void demo()
 {
     pf_entry* tmp;
     char order_c[2];
     char index_c[10];
-
+    
+    asyn_write("\n");
     for(int i=MAX_ORDER ; i>-1 ; i--)
     {
         tmp=&fa[i];
@@ -249,14 +264,14 @@ void demo()
 void demo_opp()
 {
     pf_entry* tmp;
-    char order_c[2];
+    char order_c[3];
     char index_c[10];
 
     for(int i=MAX_ORDER ; i>-1 ; i--)
     {
         tmp=&fa[i];
         strset(order_c, '\0', 2);
-        itoa(i, order_c, 1);
+        itoa(i, order_c, 2);
         uart_puts("order ");
         uart_puts(order_c);
         uart_puts(" : ");
@@ -292,4 +307,23 @@ void demo_opp()
         char del[11] = {127,127,127,127,'\n','\r','\0'}; // 127 : ASCII "del"
         uart_puts(del);
     }
+}
+
+void found_RM(int pf_index, int RM_index)
+{
+    char index_c[10];
+    strset(index_c, '\0', 10);
+    int count=1;
+    int tmp_index=pf_index;
+    while(tmp_index/10 != 0)
+    {
+        tmp_index/=10;
+        count++;
+    }
+    itoa(pf_index, index_c, count);
+    asyn_write("Page Frame ");
+    asyn_write(index_c);
+    asyn_write(" has reserved memory : ");
+    asyn_write(RMlist[RM_index].name);
+    asyn_write("\n");
 }

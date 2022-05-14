@@ -177,9 +177,4 @@ void RX_handler(char* irq,char *iir)
         read_buffer[len_RB]='\0';
         len_RB=0;
     }
-    // else
-    // {
-    //     uart_puts(read_buffer);
-    //     uart_puts("\n");
-    // }   
 }
