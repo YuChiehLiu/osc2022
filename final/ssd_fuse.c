@@ -202,6 +202,9 @@ static int ftl_read( char* buf, size_t lba)
     nand_read(tmp_buf, tmp_pca);
 
     memcpy(buf, tmp_buf, 512);
+
+    if(gc_mutex && free_block_number < 10)
+        gc();
     
     return 0;
     // TODO
